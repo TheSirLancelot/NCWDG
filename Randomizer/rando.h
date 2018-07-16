@@ -7,16 +7,14 @@
 #ifndef RANDO_H_
 #define RANDO_H_
 
-
-#define BUF 40
+//Global Variable Declaration
 #define DICE_ROLLER 49
 #define CIRCLE_AREA 50
 #define CUBE_VOLUME 51
 #define HI_LO 52
 #define QUIT 48
 
-
-
+//Function prototypes
 void menu();
 void dice();
 void circle();
@@ -25,5 +23,5 @@ void hiLo();
 void clean();
 int validate(char *input, int buf, int isFloatAllowed);
 void error();
-
+void saveFile(int choice, float circle, unsigned long long cube);
 #endif /* RANDO_H_ */

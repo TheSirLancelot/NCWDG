@@ -15,4 +15,4 @@ librandoFunc.a: randoFunc.o
 .PHONY: clean
 
 clean:
-	rm -rf Randomizer *.o *.a *.gch
+	rm -rf Randomizer *.o *.a *.gch results.txt
