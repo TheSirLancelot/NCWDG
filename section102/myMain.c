@@ -1,9 +1,9 @@
 #include "myLibrary.h"
 
 int main(int argc, char* argv[]){
-    //printStr(argv, argc);
+    printStr(argv, argc);
     
-    /*char *strings[] = {
+    char *strings[] = {
         "dice roller",
         "area of a circle",
         "volume of a cube",
@@ -12,8 +12,8 @@ int main(int argc, char* argv[]){
     };
 
     printStr(strings, (sizeof(strings)/sizeof(char*)));
-    return 0;*/
-
+    return 0;
+/*
     char *test[] = {
         "356",
         "asdfa",
@@ -27,5 +27,5 @@ int main(int argc, char* argv[]){
         printf("Testing %s (string length: %d):\n", test[i], strlen(test[i]));
         printf("%ld\n\n", charToLong(test[i]));
     }
-
+*/
 }
