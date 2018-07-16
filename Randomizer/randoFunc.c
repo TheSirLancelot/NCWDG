@@ -63,24 +63,24 @@ void dice(){
 	printf("How many dice [1-9999]: ");
 	if(fgets(input, 6, stdin) != NULL){
 		if(validate(input, 4, 0)){
-			numDice = strtol(input, &endPtr1, 10);
-			printf("How many sides [1-9999]: ");
-			if(fgets(input, 6, stdin) != NULL){
-				if(validate(input, 4, 0)){
-					numSides = strtol(input, &endPtr2, 10);
-					printf("How many rolls [1-9999]: ");
+            numDice = strtol(input, &endPtr1, 10);
+            if(numDice == 0){error(); dice();}
+            printf("How many sides [1-9999]: ");
+	    	if(fgets(input, 6, stdin) != NULL){
+	    		if(validate(input, 4, 0)){
+		    		numSides = strtol(input, &endPtr2, 10);
+                    if(numSides == 0){error(); dice();}
+                    printf("How many rolls [1-9999]: ");
 					if(fgets(input, 6, stdin) != NULL){
-						if(validate(input, 4, 0)){
-							numRolls = strtol(input, &endPtr3, 10);
+				    	if(validate(input, 4, 0)){
+                            numRolls = strtol(input, &endPtr3, 10);
+                            if(numRolls == 0){error(); dice();}
 						} else {error(); dice();}
-					}
+					} else {error(); dice();}
 				} else {error(); dice();}
-			}
+			} else {error(); dice();}
 		} else {error(); dice();}
-	} else {
-		error();
-		dice();
-	}
+	} else { error(); dice();}
 
     //Printing calculations using user input from above
 	printf("Dice: %ld\nSides: %ld\nRolls: %ld\n\n", numDice, numSides, numRolls);
@@ -160,7 +160,7 @@ void cube(){
 
     //Get length of cube side
 	printf("\n\n\n-----Volume of a Cube-----\n\n\n");
-    printf("Enter the length of 1 side [0-2642245]:\n");
+    printf("Enter the length of 1 side [1-2642245]:\n");
     if(fgets(input, 9, stdin) != NULL){
         if(validate(input, 7, 0)){
             //Using unsigned long long to accomodate very large number
@@ -219,11 +219,13 @@ void clean(){
     //Local Variables
 	char trash;
 	int flags = fcntl(0, F_GETFL); //Get backup of current stdin flags
+
 	fcntl(0, F_SETFL, O_NONBLOCK); //Set stdin to non-blocking
 	if(!feof(stdin)){ //Grab char THEN check if newline or EOF
 		do trash=getchar(); while(trash != '\n' && trash != EOF);
 	}
 	fcntl(0, F_SETFL, flags); //Revert stdin flags to backup
+    trash = 0;
 }
 
 /*
@@ -310,6 +312,8 @@ void saveFile(int choice, float circle, unsigned long long cube){
                     }   
                 }
             fclose(file); //close the file
+            } else if(userOpt == '2'){
+                return;
             } else {error(); menu();}
         } else {error(); menu();}
     }
