@@ -1,7 +1,7 @@
-all: EchoSrv
+all: Server
 
-EchoSrv: server.o client.o libsocksLib.a
-	gcc -lm -o EchoSrv server.o client.o -L. -lsocksLib
+Server: server.o libsocksLib.a
+	gcc -lm -o Server server.o -L. -lsocksLib
 
 server.o: server.c
 	gcc -O -c server.c
@@ -18,4 +18,9 @@ libsocksLib.a: socksLib.o
 .PHONY: clean
 
 clean:
-	rm -rf EchoSrv *.o *.a *.gch
+	rm -rf Server Client *.o *.a *.gch
+
+.PHONY: client
+
+client: client.o libsocksLib.a
+	gcc -lm -o Client client.o -L. -lsocksLib
