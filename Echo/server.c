@@ -5,7 +5,7 @@ int main(int argc, char *argv[]){
     int sockFd = 0, clientFd = 0, bytesReceived = 0, bytesSent = 0;
     struct sockaddr_in servAddr = {0};
     char *buf = NULL;
-    
+
     if(argc != 3){
         perror("Usage: ./Server <Server IP> <Server Port>\n");
         exit(EXIT_FAILURE);
@@ -21,14 +21,18 @@ int main(int argc, char *argv[]){
 
     //Populate address info
     if((SocketDemoUtils_populateAddrInfo(argv[1], argv[2], &servAddr)) == -1){
-        exit(EXIT_FAILURE);                  
+        exit(EXIT_FAILURE);
     }
 
-    
+    //Bind the socket to the IP/Port
+    if((SocketDemoUtils_bind(sockFd, &servAddr)) == -1){
+        exit(EXIT_FAILURE);
+    }
 
-    //TODO: bind the socket tot eh ip address and port
-    
     //TODO: set up the socket to be listening
+    if((SocketDemoUtils_listen(sockFd)) == -1){
+         exit(EXIT_FAILURE);
+    }
 
     while(1){
         //TODO: accept connection
@@ -38,11 +42,11 @@ int main(int argc, char *argv[]){
 
         while(1){
             //TODO: allocate memory for receiving
-            
+
             //TODO: receive the message until it has been completely received
 
             //TODO: send the message to the client
-    
+
             //TODO: clean up the buffer memory to avoid memory leak
         }
         //TODO: shut down connection with client gracefully

@@ -7,8 +7,8 @@ int SocketDemoUtils_createTcpSocket(){
     if((sockFd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
         perror("Error creating socket\n");
         return -1
-    } 
-    
+    }
+
     //Set socket to reusable
     if((setsockopt(sockFd, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse))) == -1){
         perror("Error setting socket option\n");
@@ -18,6 +18,7 @@ int SocketDemoUtils_createTcpSocket(){
     return sockFd;
 }
 
+//Populate socket with address info
 int SocketDemoUtils_populateAddrInfo(char *ipAddr, char *port, struct sockaddr_in *addr){
     addr->sin_family = AF_INET;
     if((inet_pton(AF_INET, *ipAddr, &(addr->sin_addr))) ==  -1){
@@ -28,13 +29,21 @@ int SocketDemoUtils_populateAddrInfo(char *ipAddr, char *port, struct sockaddr_i
     return 0;
 }
 
-//TODO: Below functionality
+//Bind socket to IP/Port
 int SocketDemoUtils_bind(int sockFd, struct sockaddr_in *addr){
+    if((bind(sockFd, (struct sockaddr *) &servAddr, sizeof(servAddr))) == -1){
+        perror("Error binding socket\n");
+        return -1;
+    }
     return 0;
 }
-
+//TODO: Below functionality
 int SocketDemoUtils_listen(int sockFd){
-    return 0;
+     if((listen(sockFd, SOMAXCONN)) == -1){
+        perror("Error listening on socket\n");
+        return -1;
+     }
+     return 0;
 }
 
 int SocketDemoUtils_accept(int sockFd, struct sockaddr_in *addr){
