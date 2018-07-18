@@ -53,19 +53,34 @@ int SocketDemoUtils_listen(int sockFd){
 }
 
 int SocketDemoUtils_accept(int sockFd, struct sockaddr_in *addr){
+    int clientFd = 0;
     int cliLen = sizeof(addr);
-    if(accept(sockFd, (struct sockaddr *) addr, &cliLen) == -1){
+
+    clientFd = accept(sockFd, (struct sockaddr *) addr, &cliLen);
+    if(clientFd == -1){
         perror("Error accepting connections");
         return -1;
     }
     printf("Accepted connection.\n");
-    return 0;
+    return clientFd;
 }
 
 int SocketDemoUtils_recv(int sockFd, char **buf){
-    return 0;
+    int x = 0;
+    x = recv(sockFd, buf, BUFF_LEN, 0);
+    if(x == -1){
+        perror("Error receiving message ");
+        return -1;
+    }
+    return x;
 }
 
 int SocketDemoUtils_send(int sockFd, char *buf, int numBytes){
+    if((send(sockFd, buf, numBytes, 0)) == -1){
+        perror("Error sending message ");
+        return -1;
+    }
+    printf("Message sent\n");
     return 0;
 }
+

@@ -4,6 +4,7 @@ int main(int argc, char *argv[]){
 
     int sockFd = 0;
     struct sockaddr_in servAddr = {0};
+    char sendLine[BUFF_LEN];
 
     //Print usage if cmd line error
     if(argc != 3){
@@ -32,8 +33,14 @@ int main(int argc, char *argv[]){
         exit(EXIT_FAILURE);
     }
 
-    //TODO: Send/Receive Funcs
-
+    //Send message
+    memset(&sendLine, 0, sizeof(sendLine));
+    while(fgets(sendLine, BUFF_LEN, stdin) != NULL){
+        if((SocketDemoUtils_send(sockFd, sendLine, strlen(sendLine))) == -1){
+            exit(EXIT_FAILURE);
+        }
+    }
 
     return 0;
 }
+

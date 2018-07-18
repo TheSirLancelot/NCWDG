@@ -2,7 +2,8 @@
 
 int main(int argc, char *argv[]){
 
-    int sockFd = 0, clientFd = 0, bytesReceived = 0, bytesSent = 0;
+    int sockFd = 0, clientFd = 0, bytesReceived = 0, bytesSent = 0, status = 0; 
+    int totalBuf = BUFF_LEN, remainingBuf = BUFF_LEN;
     struct sockaddr_in servAddr, cliAddr;
     char *buf = NULL;
 
@@ -35,24 +36,46 @@ int main(int argc, char *argv[]){
     }
 
     while(1){
-        //TODO: accept connection
+        //Accept connection(s) from client
         if((clientFd = (SocketDemoUtils_accept(sockFd, &cliAddr))) == -1){
             exit(EXIT_FAILURE);
         }
 
-        //TODO: once connection is accepted, receive entire message
-        //      from the client and then send it back.
+        buf = (char *)malloc(sizeof(char)*BUFF_LEN); //Allocate first bit of memory for buffer
+                
+        do {
+            if(remainingBuf == 0){ //if remaining buffer is 0, we may need more
+                if(buf[totalBuf-1] == '\n' || buf[totalBuf-1] == '\0'){ //unless the last char was on of these
+                    break;
+                }
+                char *tmp;
+                
+                totalBuf += BUFF_LEN; //add another BUFF_LEN amount of buffer
+                tmp = realloc(buf, totalBuf); //and reallocate buf to that size
+                remainingBuf += BUFF_LEN; //then correct the remaining buffer size
 
-        while(1){
-            //TODO: allocate memory for receiving
+                if(tmp == NULL){ //realloc returns null pointer on failure
+                    perror("Reallocation error ");
+                    exit(EXIT_FAILURE);
+                }
 
-            //TODO: receive the message until it has been completely received
+                buf = tmp;
+            }
 
-            //TODO: send the message to the client
-
-            //TODO: clean up the buffer memory to avoid memory leak
+        status = SocketDemoUtils_recv(clientFd, &buf);
+        if(status == 0){
+            printf("Msg received\n");
+        } else if (status > 0){
+            bytesReceived += status;
+            remainingBuf -= status;
+            printf("status: %d\n", status);
+        } else { //status < 0 = bad
+            exit(EXIT_FAILURE);
         }
+        } while(status > 0);
+
         //TODO: shut down connection with client gracefully
+        // (e.g. if buf == quit, free, shutdown, etc)
     }
 
     return 0;
