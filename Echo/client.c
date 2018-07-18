@@ -3,7 +3,7 @@
 int main(int argc, char *argv[]){
 
     int sockFd = 0;
-    struct sockadd_in servAddr = {0};;
+    struct sockaddr_in servAddr = {0};
 
     //Print usage if cmd line error
     if(argc != 3){

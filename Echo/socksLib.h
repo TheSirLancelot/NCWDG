@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
+#include <string.h>
 
 int SocketDemoUtils_createTcpSocket();
 int SocketDemoUtils_populateAddrInfo(char *ipAddr, char *port, struct sockaddr_in *addr);

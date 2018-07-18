@@ -5,48 +5,60 @@ int SocketDemoUtils_createTcpSocket(){
 
     //Create socket
     if((sockFd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
-        perror("Error creating socket\n");
-        return -1
+        perror("Error creating socket");
+        return -1;
     }
 
     //Set socket to reusable
     if((setsockopt(sockFd, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse))) == -1){
-        perror("Error setting socket option\n");
+        perror("Error setting socket option");
         return -1;
     }
-
+    printf("socket created\n");
     return sockFd;
 }
 
 //Populate socket with address info
 int SocketDemoUtils_populateAddrInfo(char *ipAddr, char *port, struct sockaddr_in *addr){
+    char *endPtr;
+    
     addr->sin_family = AF_INET;
-    if((inet_pton(AF_INET, *ipAddr, &(addr->sin_addr))) ==  -1){
-        perror("Error assigning address to socket\n");
+    if((inet_pton(AF_INET, ipAddr, &(addr->sin_addr))) ==  -1){
+        perror("Error assigning address to socket");
         return -1;
     }
-    addr->sin_port = htons(*port);
+    addr->sin_port = htons(strtol(port, &endPtr, 10));
+    printf("address populated\n");
     return 0;
 }
 
 //Bind socket to IP/Port
 int SocketDemoUtils_bind(int sockFd, struct sockaddr_in *addr){
-    if((bind(sockFd, (struct sockaddr *) &servAddr, sizeof(servAddr))) == -1){
-        perror("Error binding socket\n");
+    if((bind(sockFd, (struct sockaddr *) addr, sizeof(*addr))) == -1){
+        perror("Error binding socket");
         return -1;
     }
+    printf("socket binded\n");
     return 0;
 }
-//TODO: Below functionality
+
+//Set socket to listen
 int SocketDemoUtils_listen(int sockFd){
      if((listen(sockFd, SOMAXCONN)) == -1){
-        perror("Error listening on socket\n");
+        perror("Error listening on socket");
         return -1;
      }
+     printf("Server listening for connections\n");
      return 0;
 }
 
 int SocketDemoUtils_accept(int sockFd, struct sockaddr_in *addr){
+    int cliLen = sizeof(addr);
+    if(accept(sockFd, (struct sockaddr *) addr, &cliLen) == -1){
+        perror("Error accepting connections");
+        return -1;
+    }
+    printf("Accepted connection.\n");
     return 0;
 }
 
