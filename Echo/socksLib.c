@@ -105,7 +105,6 @@ int SocketDemoUtils_recv(int sockFd, char **buf){
         }
 
         if(status == 0){ //Connection closed by client
-            printf("Connection closed\n");
             return 0;
         } else if(status > 0){ //We have a message
             bytesReceived += status;

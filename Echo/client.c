@@ -8,7 +8,7 @@ int main(int argc, char *argv[]){
 
     //Print usage if cmd line error
     if(argc != 3){
-        perror("Usage: ./Client <Server IP> <Server port>\n");
+        printf("Usage: ./Client <Server IP> <Server port>\n");
         exit(EXIT_FAILURE);
     }
 
@@ -43,4 +43,3 @@ int main(int argc, char *argv[]){
 
     return 0;
 }
-
