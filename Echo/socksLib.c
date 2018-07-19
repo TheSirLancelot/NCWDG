@@ -21,7 +21,7 @@ int SocketDemoUtils_createTcpSocket(){
 //Populate socket with address info
 int SocketDemoUtils_populateAddrInfo(char *ipAddr, char *port, struct sockaddr_in *addr){
     char *endPtr;
-    
+
     addr->sin_family = AF_INET;
     if((inet_pton(AF_INET, ipAddr, &(addr->sin_addr))) ==  -1){
         perror("Error assigning address to socket");
@@ -66,13 +66,57 @@ int SocketDemoUtils_accept(int sockFd, struct sockaddr_in *addr){
 }
 
 int SocketDemoUtils_recv(int sockFd, char **buf){
-    int x = 0;
-    x = recv(sockFd, buf, BUFF_LEN, 0);
-    if(x == -1){
-        perror("Error receiving message ");
-        return -1;
+    int bytesReceived = 0, totalBuf = 0, remainingBuf = 0, status = 0;
+
+    if(totalBuf == 0){
+        //Allocate first bit of memory for buffer
+        *buf = (char *)calloc(BUFF_LEN, sizeof(char));
+        //Set the sizes to reflect new buffer size
+        totalBuf = BUFF_LEN;
+        remainingBuf = BUFF_LEN;
     }
-    return x;
+
+    if(remainingBuf < BUFF_LEN){
+        if(*buf[bytesReceived-1] == '\0'){
+            printf("Message received.\n");
+            return 0;
+        }
+
+        //reallocate some more memory
+        char *tmp;
+        totalBuf += BUFF_LEN; //add another BUFF_LEN amount of buffer
+        tmp = realloc(*buf, totalBuf); //and reallocate buf to that size
+        remainingBuf += BUFF_LEN; //then correct the remaining buffer size
+
+        if(tmp == NULL){ //realloc returns null pointer on failure
+            perror("Reallocation error ");
+            return -1;
+        }
+        //Set newly created buf to old buf
+        *buf = tmp;
+    }
+
+    do
+    {
+        //Receive Message
+        if((status = recv(sockFd, *buf+bytesReceived, BUFF_LEN, 0)) == -1){
+            perror("Error receiving message ");
+            return -1;
+        }
+
+        if(status == 0){ //Connection closed by client
+            printf("Connection closed\n");
+            return 0;
+        } else if(status > 0){ //We have a message
+            bytesReceived += status;
+            remainingBuf -= bytesReceived;
+        } else { //status < 0 = bad
+            perror("Error receiving message ");
+            return -1;
+        }
+    } while(status > 0);
+
+    return 0;
 }
 
 int SocketDemoUtils_send(int sockFd, char *buf, int numBytes){
@@ -83,4 +127,3 @@ int SocketDemoUtils_send(int sockFd, char *buf, int numBytes){
     printf("Message sent\n");
     return 0;
 }
-
