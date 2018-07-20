@@ -35,9 +35,6 @@ int main(int argc, char *argv[]){
          exit(EXIT_FAILURE);
     }
 
-    //Set the socket to non-blocking
-    fcntl(listener, F_SETFL, O_NONBLOCK);
-
     //Add listener to file descripter set
     FD_SET(listener, &master);
 
@@ -59,6 +56,7 @@ int main(int argc, char *argv[]){
                     if((clientFd = (SocketDemoUtils_accept(listener, &cliAddr))) == -1){
                         exit(EXIT_FAILURE);
                     }
+                    printf("listener: %d, client: %d\n", listener, clientFd);
                     FD_SET(clientFd, &master); //add to master set
                     if(clientFd>fdmax){
                         fdmax = clientFd; //keep track of max file descripters
@@ -76,13 +74,17 @@ int main(int argc, char *argv[]){
                         close(i);
                         FD_CLR(i, &master); //remove from the master set
                     } else {
-                        //TODO: WHY ISN'T THIS WORKING?!
-                        printf("Message: %s\n", buf);
-                        //We have data
-                        //if(SocketDemoUtils_send(i, *buf, msgLen) == -1){
-                        //    exit(EXIT_FAILURE);
-                        //TODO: free?
+                        if((strcmp(buf, "quit\n") == 0) || (strcmp(buf, "Quit\n") == 0)){
+                            printf("Goodbye.\n");
+                            close(i);
+                            FD_CLR(i, &master);
+                            break;
                         }
+                        //We have data
+                        if(SocketDemoUtils_send(i, buf, msgLen) == -1){
+                            exit(EXIT_FAILURE);
+                        }
+                    }
                 } //end handle data from client
             } //end data exists
         } // end Looking for data to read

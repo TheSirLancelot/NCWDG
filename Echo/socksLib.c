@@ -54,7 +54,7 @@ int SocketDemoUtils_listen(int sockFd){
 
 int SocketDemoUtils_accept(int sockFd, struct sockaddr_in *addr){
     int clientFd = 0;
-    int cliLen = sizeof(addr);
+    int cliLen = sizeof(*addr);
 
     clientFd = accept(sockFd, (struct sockaddr *) addr, &cliLen);
     if(clientFd == -1){
@@ -76,34 +76,35 @@ int SocketDemoUtils_recv(int sockFd, char **buf){
         remainingBuf = BUFF_LEN;
     }
 
-    if(remainingBuf < BUFF_LEN){
-        if(*buf[bytesReceived-1] == '\0'){
-            printf("Message received.\n");
-            return 0;
-        }
-
-        //reallocate some more memory
-        char *tmp;
-        totalBuf += BUFF_LEN; //add another BUFF_LEN amount of buffer
-        tmp = realloc(*buf, totalBuf); //and reallocate buf to that size
-        remainingBuf += BUFF_LEN; //then correct the remaining buffer size
-
-        if(tmp == NULL){ //realloc returns null pointer on failure
-            perror("Reallocation error ");
-            return -1;
-        }
-        //Set newly created buf to old buf
-        *buf = tmp;
-    }
-
     do
     {
+        if(remainingBuf < BUFF_LEN){
+            if((*buf)[bytesReceived-1] == '\n'){ //EOM reached
+                break;
+            }
+
+            //reallocate some more memory
+            char *tmp;
+            totalBuf += BUFF_LEN; //add another BUFF_LEN amount of buffer
+            tmp = realloc(*buf, totalBuf); //and reallocate buf to that size
+            if(remainingBuf < 0){
+                remainingBuf = 0; //if remainingBuf went negative, make it 0
+            }
+            remainingBuf += BUFF_LEN; //then correct the remaining buffer size
+
+            if(tmp == NULL){ //realloc returns null pointer on failure
+                perror("Reallocation error ");
+                return -1;
+            }
+            //Set newly created buf to old buf
+            *buf = tmp;
+        } //end rem<BUFF_LEN
+
         //Receive Message
         if((status = recv(sockFd, *buf+bytesReceived, BUFF_LEN, 0)) == -1){
             perror("Error receiving message ");
             return -1;
         }
-
         if(status == 0){ //Connection closed by client
             return 0;
         } else if(status > 0){ //We have a message
@@ -115,7 +116,7 @@ int SocketDemoUtils_recv(int sockFd, char **buf){
         }
     } while(status > 0);
 
-    return 0;
+    return bytesReceived;
 }
 
 int SocketDemoUtils_send(int sockFd, char *buf, int numBytes){
