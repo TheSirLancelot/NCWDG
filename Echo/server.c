@@ -7,6 +7,7 @@ int main(int argc, char *argv[]){
     char *buf = NULL;
     fd_set master, read_fds;
     struct timeval tv;
+    pid_t pid;
 
     if(argc != 3){
         printf("Usage: ./Server <Server IP> <Server Port>\n");
@@ -54,10 +55,10 @@ int main(int argc, char *argv[]){
         read_fds = master;
 
         //set timeout value
-        tv.tv_sec = 20;
+        tv.tv_sec = 120;
         tv.tv_usec = 0;
 
-        if((check = select(fdmax+1, &read_fds, NULL, NULL, &tv)) == -1){
+        if((check = select(fdmax+1, &read_fds, NULL, NULL, NULL)) == -1){
             perror("Error with select ");
             exit(EXIT_FAILURE);
         } else if (check == 0){
@@ -67,6 +68,8 @@ int main(int argc, char *argv[]){
             }
             break;
         }
+
+        //TODO: Figure out why clients over 1 sometimes crash
 
         for(int i = 0; i <= fdmax; i++){ //Looking for data to read
             if(FD_ISSET(i, &read_fds)){ //Data exists
@@ -79,17 +82,20 @@ int main(int argc, char *argv[]){
                     if(clientFd>fdmax){
                         fdmax = clientFd; //keep track of max file descripters
                     }
+                    if((pid = fork()) == 0){ //dealing with the child process
+                        close(i); //close listener socket on child
+                        FD_CLR(i, &master); //remove listener from master list
+                    }
                 } else {
                     //handle data from client
                     if((msgLen = SocketDemoUtils_recv(clientFd, &buf)) <= 0){
                         //Error or connection closed
                         if(msgLen == 0){
                             //connection closed by client
-                            printf("Goodbye.\n");
                         } else {
                             exit(EXIT_FAILURE);
                         }
-                        close(i);
+                        close(i); //close the client socket
                         FD_CLR(i, &master); //remove from the master set
                         break;
                     } else {
@@ -97,8 +103,10 @@ int main(int argc, char *argv[]){
                             printf("Goodbye.\n");
                             close(i);
                             FD_CLR(i, &master);
+                            if(pid == 0){ //if you were a child,
+                                exit(0); //we don't need you. Exit.
+                            }
                             break;
-                            //TODO: Close listener and exit program
                         }
                         //We have data
                         printf("%d bytes received\n", msgLen);
