@@ -14,13 +14,13 @@ int SocketDemoUtils_createTcpSocket(){
         perror("Error setting socket option");
         return -1;
     }
-    printf("socket created\n");
     return sockFd;
 }
 
 //Populate socket with address info
 int SocketDemoUtils_populateAddrInfo(char *ipAddr, char *port, struct sockaddr_in *addr){
     char *endPtr;
+    int convertedPort;
 
     addr->sin_family = AF_INET;
     if((inet_pton(AF_INET, ipAddr, &(addr->sin_addr))) ==  -1){
@@ -28,7 +28,6 @@ int SocketDemoUtils_populateAddrInfo(char *ipAddr, char *port, struct sockaddr_i
         return -1;
     }
     addr->sin_port = htons(strtol(port, &endPtr, 10));
-    printf("address populated\n");
     return 0;
 }
 
@@ -38,7 +37,6 @@ int SocketDemoUtils_bind(int sockFd, struct sockaddr_in *addr){
         perror("Error binding socket");
         return -1;
     }
-    printf("socket binded\n");
     return 0;
 }
 
@@ -124,6 +122,48 @@ int SocketDemoUtils_send(int sockFd, char *buf, int numBytes){
         perror("Error sending message ");
         return -1;
     }
-    printf("Message sent\n");
+    printf("%d bytes sent\n", numBytes);
     return 0;
+}
+
+int isValidIP(char *ipAddress){
+    struct sockaddr_in sa;
+
+    if(ipAddress[0] == '.'){
+        return -1;
+    }
+
+    //will return 0 or -1 if error
+    int result = inet_pton(AF_INET, ipAddress, &(sa.sin_addr));
+    return result;
+}
+
+int isValidPort(char *port){
+    char *endPtr;
+        long result;
+
+    if((result = strtol(port, &endPtr, 10)) == 0){
+        //There was an error with strtol
+        printf("Error: Not a valid port\n");
+        return -1;
+    }
+
+    if(endPtr == port){
+        //no conversion was performed
+        printf("Empty port number\n");
+        return -1;
+    } else if (*endPtr == '\0'){
+        //everything was converted
+        if(result < 1025 || result > 65535){
+            printf("Please enter a port between 1025-65534\n");
+            return -1;
+        } else {
+            return 1;
+        }
+    } else {
+        //there's still string left after the conversion
+        printf("Error: Not a valid port\n");
+        return -1;
+    }
+
 }

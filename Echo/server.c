@@ -6,9 +6,17 @@ int main(int argc, char *argv[]){
     struct sockaddr_in servAddr, cliAddr;
     char *buf = NULL;
     fd_set master, read_fds;
+    struct timeval tv;
 
     if(argc != 3){
         printf("Usage: ./Server <Server IP> <Server Port>\n");
+        exit(EXIT_FAILURE);
+    }
+    if((isValidIP(argv[1])) <= 0){
+        printf("Error: Not a valid IP address\n");
+        exit(EXIT_FAILURE);
+    }
+    if((isValidPort(argv[2])) <= 0){
         exit(EXIT_FAILURE);
     }
 
@@ -44,9 +52,20 @@ int main(int argc, char *argv[]){
     while(1){
         //Copy info from master to a working set
         read_fds = master;
-        if(select(fdmax+1, &read_fds, NULL, NULL, NULL) == -1){
+
+        //set timeout value
+        tv.tv_sec = 20;
+        tv.tv_usec = 0;
+
+        if((check = select(fdmax+1, &read_fds, NULL, NULL, &tv)) == -1){
             perror("Error with select ");
             exit(EXIT_FAILURE);
+        } else if (check == 0){
+            printf("Program exiting due to inactivity\n");
+            for(int i = 0; i <= fdmax; i++){
+                close(i);
+            }
+            break;
         }
 
         for(int i = 0; i <= fdmax; i++){ //Looking for data to read
@@ -56,7 +75,6 @@ int main(int argc, char *argv[]){
                     if((clientFd = (SocketDemoUtils_accept(listener, &cliAddr))) == -1){
                         exit(EXIT_FAILURE);
                     }
-                    printf("listener: %d, client: %d\n", listener, clientFd);
                     FD_SET(clientFd, &master); //add to master set
                     if(clientFd>fdmax){
                         fdmax = clientFd; //keep track of max file descripters
@@ -73,14 +91,17 @@ int main(int argc, char *argv[]){
                         }
                         close(i);
                         FD_CLR(i, &master); //remove from the master set
+                        break;
                     } else {
                         if((strcmp(buf, "quit\n") == 0) || (strcmp(buf, "Quit\n") == 0)){
                             printf("Goodbye.\n");
                             close(i);
                             FD_CLR(i, &master);
                             break;
+                            //TODO: Close listener and exit program
                         }
                         //We have data
+                        printf("%d bytes received\n", msgLen);
                         if(SocketDemoUtils_send(i, buf, msgLen) == -1){
                             exit(EXIT_FAILURE);
                         }
@@ -89,5 +110,6 @@ int main(int argc, char *argv[]){
             } //end data exists
         } // end Looking for data to read
     } //end while loop
+    free(buf);
     return 0;
 } //End main
