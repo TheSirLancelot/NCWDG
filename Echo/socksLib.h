@@ -9,7 +9,7 @@
 #include <fcntl.h>
 #include <ctype.h>
 
-#define BUFF_LEN 10
+#define BUFF_LEN 50
 
 int SocketDemoUtils_createTcpSocket();
 int SocketDemoUtils_populateAddrInfo(char *ipAddr, char *port, struct sockaddr_in *addr);

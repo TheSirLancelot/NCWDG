@@ -2,10 +2,10 @@
 
 int main(int argc, char *argv[]){
 
-    int sockFd = 0, end = 0;
-    struct sockaddr_in servAddr = {0};
-    char *sendLine = NULL;
-    char *buf = NULL;
+    int sockFd = 0; //file descripter for socket
+    struct sockaddr_in servAddr = {0}; //address for client
+    char *sendLine = NULL; //for sending
+    char *buf = NULL; //for receiving
 
     //create a local copy of bufLen for getline to change as necessary
     size_t bufLen = BUFF_LEN;
@@ -15,15 +15,15 @@ int main(int argc, char *argv[]){
         printf("Usage: ./Client <Server IP> <Server port>\n");
         exit(EXIT_FAILURE);
     }
+    //Check IP
     if((isValidIP(argv[1])) <= 0){
         printf("Error: Not a valid IP address\n");
         exit(EXIT_FAILURE);
     }
+    //Check Port
     if((isValidPort(argv[2])) <= 0){
         exit(EXIT_FAILURE);
     }
-
-    //TODO: Validate user input
 
     //Create socket
     if((sockFd = SocketDemoUtils_createTcpSocket()) == -1){
@@ -50,27 +50,29 @@ int main(int argc, char *argv[]){
 
     //Send message
     while(1){
+        //Get stdin
         if((getline(&sendLine, &bufLen, stdin)) == -1){
             perror("getline error ");
             exit(EXIT_FAILURE);
         }
 
+        //Send to the server
         if((SocketDemoUtils_send(sockFd, sendLine, strlen(sendLine))) == -1){
             exit(EXIT_FAILURE);
         }
 
+        //User wants to quit
         if((strcmp(sendLine, "quit\n") == 0) || (strcmp(sendLine, "Quit\n") == 0)){
             printf("Goodbye.\n");
             close(sockFd);
             break;
-        } else {
+        } else { //the user receives what they sent
             if((SocketDemoUtils_recv(sockFd, &buf)) == -1){
                 exit(EXIT_FAILURE);
             }
             printf("Message received: %s\n", buf);
+            free(buf);
         }
     }
-    free(buf);
-    free(sendLine);
-    return 0;
+    return 0; //exit cleanly
 }

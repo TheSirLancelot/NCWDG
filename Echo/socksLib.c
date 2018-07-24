@@ -64,7 +64,7 @@ int SocketDemoUtils_accept(int sockFd, struct sockaddr_in *addr){
 }
 
 int SocketDemoUtils_recv(int sockFd, char **buf){
-    int bytesReceived = 0, totalBuf = 0, remainingBuf = 0, status = 0;
+    int bytesReceived = 0, totalBuf = 0, status = 0, remainingBuf = 0;
 
     if(totalBuf == 0){
         //Allocate first bit of memory for buffer
@@ -85,9 +85,6 @@ int SocketDemoUtils_recv(int sockFd, char **buf){
             char *tmp;
             totalBuf += BUFF_LEN; //add another BUFF_LEN amount of buffer
             tmp = realloc(*buf, totalBuf); //and reallocate buf to that size
-            if(remainingBuf < 0){
-                remainingBuf = 0; //if remainingBuf went negative, make it 0
-            }
             remainingBuf += BUFF_LEN; //then correct the remaining buffer size
 
             if(tmp == NULL){ //realloc returns null pointer on failure
@@ -96,6 +93,7 @@ int SocketDemoUtils_recv(int sockFd, char **buf){
             }
             //Set newly created buf to old buf
             *buf = tmp;
+            printf("Total Buffer Size: %d\n", totalBuf);
         } //end rem<BUFF_LEN
 
         //Receive Message
@@ -106,8 +104,12 @@ int SocketDemoUtils_recv(int sockFd, char **buf){
         if(status == 0){ //Connection closed by client
             return 0;
         } else if(status > 0){ //We have a message
-            bytesReceived += status;
-            remainingBuf -= bytesReceived;
+            bytesReceived += status; //add new bytes to total bytes received
+            //adjust the remaining bytes on the buffer
+            if((remainingBuf -= status) < 0){
+                remainingBuf = 0;
+            }
+            printf("Status: %d\nBytesReceived: %d\nRemainingBuf: %d\n", status, bytesReceived, remainingBuf);
         } else { //status < 0 = bad
             perror("Error receiving message ");
             return -1;
