@@ -93,7 +93,7 @@ int SocketDemoUtils_recv(int sockFd, char **buf){
             }
             //Set newly created buf to old buf
             *buf = tmp;
-            printf("Total Buffer Size: %d\n", totalBuf);
+            //printf("Total Buffer Size: %d\n", totalBuf);
         } //end rem<BUFF_LEN
 
         //Receive Message
@@ -109,7 +109,7 @@ int SocketDemoUtils_recv(int sockFd, char **buf){
             if((remainingBuf -= status) < 0){
                 remainingBuf = 0;
             }
-            printf("Status: %d\nBytesReceived: %d\nRemainingBuf: %d\n", status, bytesReceived, remainingBuf);
+            //printf("Status: %d\nBytesReceived: %d\nRemainingBuf: %d\n", status, bytesReceived, remainingBuf);
         } else { //status < 0 = bad
             perror("Error receiving message ");
             return -1;
@@ -142,7 +142,7 @@ int isValidIP(char *ipAddress){
 
 int isValidPort(char *port){
     char *endPtr;
-        long result;
+    long result;
 
     if((result = strtol(port, &endPtr, 10)) == 0){
         //There was an error with strtol

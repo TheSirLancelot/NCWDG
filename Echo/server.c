@@ -8,8 +8,7 @@ int main(int argc, char *argv[]){
     char *buf = NULL; //receving buffer
     char *sendLine = NULL; //sendline for server stdin
     fd_set master, read_fds; //filesets for select
-    struct timeval tv; //for a timeout if being used
-    pid_t pid = getpid(); //pid for fork
+    //struct timeval tv; //for a timeout if being used
     size_t bufLen = BUFF_LEN; //buffer length for getline
 
     if(argc != 3){
@@ -57,7 +56,6 @@ int main(int argc, char *argv[]){
 
     //Number of file descripters
     fdmax = listener;
-    printf("Listener: %d\n", listener);
 
     while(1){
         //Copy info from master to a working set
@@ -82,7 +80,6 @@ int main(int argc, char *argv[]){
         for(int i = 0; i <= fdmax; i++){ //Looking for data to read
             if(FD_ISSET(i, &read_fds)){ //Data exists
                 if(i == listener){ //incoming connection
-                    printf("\nPid %d is Selecting: %d \n", pid, i);
                     //Accept connection from client
                     if((clientFd = (SocketDemoUtils_accept(listener, &cliAddr))) == -1){
                         exit(EXIT_FAILURE);
@@ -91,14 +88,7 @@ int main(int argc, char *argv[]){
                     if(clientFd>fdmax){
                         fdmax = clientFd; //keep track of max file descripters
                     }
-                    if((pid = fork()) == 0){ //dealing with the child process
-                        printf("My pid is: %d\n", pid);
-                        printf("Closing: %d\n", i);
-                        close(i); //close listener socket on child
-                        FD_CLR(i, &master); //remove listener from master list
-                    }
                 } else if(i == 0){ //something is on the server's STDIN
-                    printf("\nPid %d is Selecting: %d \n", pid, i);
                     if((getline(&sendLine, &bufLen, stdin)) == -1){
                         perror("input error on stdin ");
                     }
@@ -112,38 +102,30 @@ int main(int argc, char *argv[]){
                         printf("Type 'quit' to quit\n");
                     }
                 } else {
-                    if(pid == 0){
-                        printf("\nPid %d is Selecting: %d \n", pid, i);
-                        //handle data from client
-                        if((msgLen = SocketDemoUtils_recv(i, &buf)) <= 0){
-                            //Error or connection closed
-                            if(msgLen == 0){
-                                //connection closed by client
-                            } else {
-                                exit(EXIT_FAILURE);
-                            }
-                            close(i); //close the client socket
-                            FD_CLR(i, &master); //remove from the master set
-                            break;
+                    //handle data from client
+                    if((msgLen = SocketDemoUtils_recv(i, &buf)) <= 0){
+                        //Error or connection closed
+                        if(msgLen == 0){
+                            //connection closed by client
                         } else {
-                            if((strcmp(buf, "quit\n") == 0) || (strcmp(buf, "Quit\n") == 0)){
-                                printf("Goodbye from pid: %d.\n", pid);
-                                close(i);
-                                FD_CLR(i, &master);
-                                if(pid == 0){ //if you were a child,
-                                    printf("closing pid: %d\n", pid);
-                                    exit(0); //we don't need you. Exit.
-                                }
-                                break;
-                            }
-                            //We have data
-                            printf("%d bytes received\n", msgLen);
-                            //send it back
-                            if(SocketDemoUtils_send(i, buf, msgLen) == -1){
-                                exit(EXIT_FAILURE);
-                            }
-                            free(buf);
+                            exit(EXIT_FAILURE);
                         }
+                        close(i); //close the client socket
+                        FD_CLR(i, &master); //remove from the master set
+                        break;
+                    } else {
+                        if((strcmp(buf, "quit\n") == 0) || (strcmp(buf, "Quit\n") == 0)){
+                            close(i);
+                            FD_CLR(i, &master);
+                            break;
+                        }
+                        //We have data
+                        printf("%d bytes received\n", msgLen);
+                        //send it back
+                        if(SocketDemoUtils_send(i, buf, msgLen) == -1){
+                            exit(EXIT_FAILURE);
+                        }
+                        free(buf);
                     }
                 } //end handle data from client
             } //end data exists

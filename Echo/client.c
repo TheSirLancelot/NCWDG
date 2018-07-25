@@ -51,6 +51,7 @@ int main(int argc, char *argv[]){
     //Send message
     while(1){
         //Get stdin
+        printf("Type your message [type 'quit' to quit]:\n");
         if((getline(&sendLine, &bufLen, stdin)) == -1){
             perror("getline error ");
             exit(EXIT_FAILURE);
