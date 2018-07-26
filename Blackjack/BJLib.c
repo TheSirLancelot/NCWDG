@@ -2,8 +2,8 @@
 
 //struct definitions
 typedef struct card {
-    int value; //Ace = 1, 2-10, J = 11, Q = 12, K = 13
-    char suit; //H, C, S, D
+    char value; //Ace = 1, 2-10, J = 11, Q = 12, K = 13
+    wchar_t suit; //H, C, S, D
 } Card;
 
 typedef struct player {
@@ -12,20 +12,14 @@ typedef struct player {
     Card hand[21]; //array of Cards with max amount of 21 cards (21 aces)
 } Player;
 
-//symbols for suits
-const wchar_t SPADE = 0X2664;
-const wchar_t HEART = 0x2661;
-const wchar_t DIAMOND = 0x2662;
-const wchar_t CLUB = 0x2667;
-
 //function to display the menu
 void menu(){
     char *userInput = NULL; //buffer for user input
     size_t bufLen = 2; //should only be getting 2 characters (num + \n)
 
-    //make the screen pretty
     if((system("clear")) < 0){
-        perror("couldn't clear screen ");
+        perror("system error");
+        exit(EXIT_FAILURE);
     }
 
     if(1==1){ //ASCII art in a loop so I can hide it in the editor; Ignore this
@@ -55,7 +49,7 @@ void menu(){
                 rules();
                 break;
             case '3':
-                cleanup();
+                exit(EXIT_SUCCESS);
                 break;
             default:
                 printf("Please choose an appropriate option:\n\n");
@@ -65,20 +59,21 @@ void menu(){
 
 //function to play the game
 void game(){
-    int gameNum = 0;
-    char *name = NULL;
-    size_t bufLen = 21;
-
-    //make the screen pretty
-    if((system("clear")) < 0){
-        perror("couldn't clear screen ");
-    }
+    char *choice = NULL; //hits or stands
+    size_t bufLen = 21; //for getline
+    int value; //for Card
+    int index; //index for picking suits/values
+    int stay = 0; //for checking if player wants to stay
+    int playerBust = 0; //whether player busted
+    int dealerBust = 0; //whether dealer busted
+    wchar_t suits[] = {SPADE, HEART, DIAMOND, CLUB};
+    char cards[] = {'A','2','3','4','5','6','7','8','9','T','J','Q','K'};
 
     //Get the user's name
     if(gameNum == 0){
         int strLen;
 
-        printf("What is your name? [20 chars max]\n");
+        printf("\n\n\nWhat is your name? [20 chars max]:\n");
         if((getline(&name, &bufLen, stdin)) < 0){
             perror("getline error ");
             exit(EXIT_FAILURE);
@@ -88,18 +83,141 @@ void game(){
         if(name[strLen-1] == '\n'){
             name[strLen-1] = '\0';
         }
-    }
+    } //end get user's name
 
-    printf("\n\nGame Number %d:\n", gameNum);
+    printf("\n\nGame Number %d:\n\n\n", ++gameNum);
 
     //create two players
     Player *player = newPlayer(name);
     Player *dealer = newPlayer("Dealer");
 
-    printf("Your name is %s\n", player->name);
-    printf("The dealer's name is: %s\n", dealer->name);
+    //Deal the first cards
+    for(int i = 0; i < 2; i++){
+        index = (rand() % 13); //rand # 0-12
+        player->hand[i].value = cards[index];
+        index = (rand() % 4); //rand # 0-3
+        player->hand[i].suit = suits[index]; //assign suit to card
+        //repeat for dealer
+        index = (rand() % 13);
+        dealer->hand[i].value = cards[index];
+        index = (rand() % 4);
+        dealer->hand[i].suit = suits[index];
+    } //end deal first cards
 
-    cleanup();
+    //Calculate the first totals:
+    if(dealer->hand[1].value == 'A' || dealer->hand[1].value == 'K' || dealer->hand[1].value == 'Q' || dealer->hand[1].value == 'J' || dealer->hand[1].value == 'T'){
+        //check for blackjack
+        score(dealer, 0);
+        if(dealer->score == 21){
+            score(player, 0);
+            show(dealer, 2, 0);
+            show(player, 2, 0);
+            printf("Dealer has BlackJack! You lose!\n");
+            playAgain(player, dealer);
+        }
+    } //end calculate first totals
+    //If dealer doesn't have blackjack
+    score(dealer, 1);
+    score(player, 0);
+
+    //Show the first 2 cards
+    show(dealer, 2, 1);
+    show(player, 2, 0);
+
+    if(player->score == 21){
+        printf("%s WINS WITH A BLACKJACK!\n", player->name);
+        playAgain(player, dealer);
+    }
+
+    int playerCards = 2; //where the next card will go in the hand array
+    int dealerCards = 2;
+
+    while(player->score <= 21 && stay == 0){
+        printf("[H]it or [S]tand?\n");
+        if((getline(&choice, &bufLen, stdin)) < 0){
+            perror("getline error ");
+            exit(EXIT_FAILURE);
+        }
+        switch(*choice){
+            case 'H':
+            case 'h':
+                index = (rand() % 13); //rand # 0-12
+                player->hand[playerCards].value = cards[index];
+                index = (rand() % 4); //rand # 0-3
+                player->hand[playerCards].suit = suits[index]; //assign suit to card
+                playerCards++;
+                //rescore hand
+                score(player,0);
+                //show new hands
+                printf("\n\n");
+                show(dealer,2,1);
+                show(player,playerCards,0);
+                break;
+            case 'S':
+            case 's':
+                printf("%s stays with %d\n", player->name, player->score);
+                stay = 1;
+                break;
+            default:
+                printf("H to hit, S to stay\n");
+        } //end switch
+    } //end while
+
+    if(player->score > 21){
+        playerBust = 1;
+        printf("YOU BUSTED!\n");
+    }
+
+    sleep(1);
+    printf("Dealer's turn:\n");
+    sleep(2);
+    //rescore with dealer's facedown card
+    score(dealer, 0);
+    //show hands again
+    show(dealer,dealerCards,0);
+    show(player, playerCards, 0);
+    while(dealer->score <= 21){
+        if(dealer->score < 17){
+            sleep(2);
+            printf("\nDealer Hits!\n\n");
+            index = (rand() % 13); //rand # 0-12
+            dealer->hand[dealerCards].value = cards[index];
+            index = (rand() % 4); //rand # 0-3
+            dealer->hand[dealerCards].suit = suits[index]; //assign suit to card
+            dealerCards++;
+            //rescore hand
+            score(dealer,0);
+            //show new hands
+            printf("\n\n");
+            show(dealer,dealerCards,0);
+            show(player,playerCards,0);
+        } else { //card is between 17-21
+            printf("%s stays with %d\n\n", dealer->name, dealer->score);
+            break;
+        }
+    } //end while
+    sleep(1);
+
+    if(dealer->score > 21){
+        dealerBust = 1;
+        printf("THE DEALER BUSTED!\n");
+    }
+
+    if(playerBust == 0 && dealerBust == 1){
+        printf("%s WINS!!\n\n", player->name);
+    } else if(dealerBust == 0 && playerBust ==1){
+        printf("THE DEALER WON!\n\n");
+    } else if(playerBust == 0 && (player->score > dealer->score)){
+        printf("%s WINS!!\n\n", player->name);
+    } else if(dealerBust == 0 && (dealer->score > player->score)){
+        printf("THE DEALER WON!\n\n");
+    } else if(dealerBust == 1 && playerBust == 1){
+        printf("The dealer busted, but you still lost..\n\n");
+    } else if(player->score == dealer->score){
+        printf("YOU PUSHED!\n\n");
+    }
+
+    playAgain(player, dealer);
 } //end game()
 
 //function to display rules
@@ -107,10 +225,6 @@ void rules(){
     char *userInput = NULL; //buffer for user input
     size_t bufLen = 2; //should only be getting 2 characters (num + \n)
 
-    //make the screen pretty
-    if((system("clear")) < 0){
-        perror("couldn't clear screen ");
-    }
     printf("\n\nThe object of BlackJack is simple: BEAT THE DEALER! Here's how to go about that:\n\n");
     printf("\t- Aces are 1 or 11 points, 2 to 9 according to pip value, and tens/face cards equal ten.\n\n");
     printf("\t- The value of a hand is the sum of the point values of the individual cards.\n\tA \"blackjack\" is the highest hand (an ace and any 10-point card).\n\n");
@@ -160,11 +274,6 @@ void rules(){
     }
 } //end rules()
 
-//function to cleanup and exit
-void cleanup(){
-    exit(EXIT_SUCCESS);
-} //end cleanup()
-
 Player *newPlayer(char *name){
     Player *returnVal;
     //Attempt to allocate space for a new player
@@ -178,4 +287,122 @@ Player *newPlayer(char *name){
     returnVal->name = name;
 
     return returnVal;
+}
+
+void show(Player *p, int numCards, int hasHole){
+    int spaces = (numCards * 2) + (numCards - 1);
+
+    printf(" %s:\n", p->name);
+    printf(" ");
+    for(int i = 0; i<spaces; i++){
+        printf("-");
+    }
+    printf("\n|");
+    for(int i = 0; i<spaces; i++){
+        printf(" ");
+    }
+    printf("|\n|");
+    for(int i = 0; i<numCards; i++){
+        if(hasHole == 1 && i == 0){ //first card needs to be "face down"
+            printf("??");
+        } else {
+            printf("%c%lc", p->hand[i].value, p->hand[i].suit);
+        }
+        //put a comma in between them (except for the last one)
+        if(i < (numCards -1)){
+            printf(",");
+        }
+    }
+    printf("| = %d\n|", p->score);
+    for(int i = 0; i<spaces; i++){
+        printf(" ");
+    }
+    printf("|\n");
+    printf(" ");
+    for(int i = 0; i<spaces; i++){
+        printf("-");
+    }
+    printf("\n\n");
+}
+
+void score(Player *p, int hasHole){
+    int tmpScore = 0, aceCounter = 0;
+
+    for(int i = 0; i < 22; i++){ //22 is the max number of cards we could have
+        if(hasHole == 1){
+            i++; //skips the first card if dealer's card is face down
+        }
+        switch(p->hand[i].value){ //get value, add to total value
+            case 'A':
+                aceCounter++; //keep track of the number of aces
+                tmpScore += 11;
+                break;
+            case '2':
+                tmpScore += 2;
+                break;
+            case '3':
+                tmpScore += 3;
+                break;
+            case '4':
+                tmpScore += 4;
+                break;
+            case '5':
+                tmpScore += 5;
+                break;
+            case '6':
+                tmpScore += 6;
+                break;
+            case '7':
+                tmpScore += 7;
+                break;
+            case '8':
+                tmpScore += 8;
+                break;
+            case '9':
+                tmpScore += 9;
+                break;
+            case 'T':
+            case 'J':
+            case 'Q':
+            case 'K':
+                tmpScore += 10;
+                break;
+        }
+    }
+
+    while(aceCounter > 0 && tmpScore > 21){
+        aceCounter--;
+        tmpScore -= 10;
+    }
+
+    p->score = tmpScore;
+}
+
+void playAgain(Player *p, Player *d){
+    char *choice = NULL; //hits or stands
+    size_t bufLen = 21; //for getline
+
+    printf("\nWould you like to play again [Y/N]?\n");
+    if((getline(&choice, &bufLen, stdin)) < 0){
+        perror("getline error ");
+        exit(EXIT_FAILURE);
+    }
+    while(1){
+    switch(*choice){
+        case 'Y':
+        case 'y':
+            memset(&p->hand, 0, sizeof(p->hand));
+            memset(&d->hand, 0, sizeof(d->hand));
+            game();
+            break;
+        case 'N':
+        case 'n':
+            free(p); //free player
+            free(d); //free dealer
+            exit(EXIT_SUCCESS);
+            break;
+        default:
+            printf("Please enter Y or N\n");
+        }
+    }
 }

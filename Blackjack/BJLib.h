@@ -7,26 +7,29 @@
 #include <locale.h> //also for printing symbols
 #include <string.h> //string manipulation
 #include <unistd.h> //for sleep function
+#include <time.h> //used to get a seed for rand()
+#include <fcntl.h> //for clean()
 
 //struct declaration
 typedef struct card Card;
 typedef struct player Player;
 
-//global vars
-extern const wchar_t SPADE;
-extern const wchar_t HEART;
-extern const wchar_t DIAMOND;
-extern const wchar_t CLUB;
+//symbols for suits
+const wchar_t SPADE = 0x2664;
+const wchar_t HEART = 0x2661;
+const wchar_t DIAMOND = 0x2662;
+const wchar_t CLUB = 0x2667;
+//keeping track of number of games
+int gameNum = 0;
+char *name = NULL; //holds player name
 
 //function prototypes
 void menu();
 void game();
 void rules();
-void cleanup();
 Player *newPlayer(char *name);
-
-//TODO: THESE FUNCTIONS
-void deal();
-void hit();
+void show(Player *p, int numCards, int hasHole);
+void score(Player *p, int hasHole);
+void playAgain(Player *p, Player *d);
 
 #endif
