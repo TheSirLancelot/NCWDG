@@ -80,7 +80,7 @@ void game(){
         }
         strLen = (strlen(name));
         //get rid of newline
-        if(name[strLen-1] == '\n'){
+        if(name[strLen-1] == '\n'){ //Helps with printing
             name[strLen-1] = '\0';
         }
     } //end get user's name
@@ -112,7 +112,11 @@ void game(){
             score(player, 0);
             show(dealer, 2, 0);
             show(player, 2, 0);
-            printf("Dealer has BlackJack! You lose!\n");
+            printf("Dealer has BlackJack!\n");
+            //Check to see if player has blackjack for the push
+            if(player->score == 21){
+                printf("%s ALSO has BlackJack!\n", player->name);
+            }
             playAgain(player, dealer);
         }
     } //end calculate first totals
@@ -391,7 +395,7 @@ void playAgain(Player *p, Player *d){
     switch(*choice){
         case 'Y':
         case 'y':
-            memset(&p->hand, 0, sizeof(p->hand));
+            memset(&p->hand, 0, sizeof(p->hand)); //clear out hands
             memset(&d->hand, 0, sizeof(d->hand));
             game();
             break;
