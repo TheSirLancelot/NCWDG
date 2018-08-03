@@ -1,4 +1,4 @@
-#include "BJLib.h"
+#include "BJLib.c"
 
 int main(int argc, char *argv[]){
     //For rand()

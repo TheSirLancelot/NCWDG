@@ -13,7 +13,6 @@
 //struct declaration
 typedef struct card Card;
 typedef struct player Player;
-
 //symbols for suits
 const wchar_t SPADE = 0x2664;
 const wchar_t HEART = 0x2661;
