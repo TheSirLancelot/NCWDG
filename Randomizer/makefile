@@ -1,13 +1,13 @@
 all: Randomizer
 
 Randomizer: rando.o librandoFunc.a
-	gcc -lm -o Randomizer rando.o -L. -lrandoFunc
+	gcc -lm -g -o Randomizer rando.o -L. -lrandoFunc
 
 rando.o: rando.c
-	gcc -O -c rando.c
+	gcc -O -g -c rando.c
 
 randoFunc.o: randoFunc.c rando.h
-	gcc -O -c randoFunc.c
+	gcc -O -g -c randoFunc.c
 
 librandoFunc.a: randoFunc.o
 	ar rcs librandoFunc.a randoFunc.o
